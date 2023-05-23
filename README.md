@@ -34,9 +34,12 @@
 ## 実行  
   1.プロジェクトを起動する。  
   2.下記のコマンドを実行する。  
-```     
-    curl -v -H "Content-Type:application/json" http://localhost:8080/send-fcm -d "{\"title\": \"title test\", \"message\": \"body test\"}"
-```   
+      terminalType :   (01:iPhoneApp. 02:AndroidApp)
+
+``` 
+ curl -v -H "Content-Type:application/json" http://localhost:8080/send-fcm -d "{\"pushRequestSeq\":1, \"terminalType\":\"02\", \"popupText\":\"notification body\",\"title\":\"notification title\",\"content\":\"data: message content.......\"}" 
+
+```
 
 
 

@@ -29,13 +29,13 @@
 ## 説明  
   Androidアプリ(firebase-android-demo)：   
 　　1.ユーザーデバイストークンを取得し、データベースに保存する（usersの下）。 
-  ![ユーザーとデバイストークン情報](images\users.png)  
+  ![ユーザーとデバイストークン情報](images/users.png)  
   
   本プロジェクト：  
 　　1.データベースからユーザーデバイストークンを取得する。  
 　　2.デバイスに通知メッセージを送信する。  
 　　3.通知メッセージをデータベースに保存する。   
- ![通知メッセージ情報](images\request-info.png)  
+ ![通知メッセージ情報](images/request-info.png)  
   
 
 ## 実行  

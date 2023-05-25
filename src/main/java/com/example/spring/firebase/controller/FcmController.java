@@ -24,7 +24,7 @@ public class FcmController {
 
 		String response = this.myFirebaseService.sendMessage(pushRequestDto);
 
-		System.out.print("response:" + response);
+		System.out.println("response:" + response);
 
 	}
 	

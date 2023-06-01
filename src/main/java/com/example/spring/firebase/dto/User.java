@@ -3,30 +3,24 @@ package com.example.spring.firebase.dto;
 
 public class User {
 
-//	public String uId;
-
 	public String userName;
 
 	public String email;
 
-	public String appInstanceToken;
+	public String deviceToken;
+	
+	public String terminalType;
 
 	public User() {
 	}
 
-	public User(String appInstanceToken, String userName, String email) {
-		this.appInstanceToken = appInstanceToken;
+	public User(String userName, String email, String deviceToken, String terminalType) {
+		super();
 		this.userName = userName;
 		this.email = email;
+		this.deviceToken = deviceToken;
+		this.terminalType = terminalType;
 	}
-
-//	public String getuId() {
-//		return uId;
-//	}
-//
-//	public void setuId(String uId) {
-//		this.uId = uId;
-//	}
 
 	public String getUserName() {
 		return userName;
@@ -44,12 +38,20 @@ public class User {
 		this.email = email;
 	}
 
-	public String getAppInstanceToken() {
-		return appInstanceToken;
+	public String getDeviceToken() {
+		return deviceToken;
 	}
 
-	public void setAppInstanceToken(String appInstanceToken) {
-		this.appInstanceToken = appInstanceToken;
+	public void setDeviceToken(String deviceToken) {
+		this.deviceToken = deviceToken;
+	}
+
+	public String getTerminalType() {
+		return terminalType;
+	}
+
+	public void setTerminalType(String terminalType) {
+		this.terminalType = terminalType;
 	}
 
 }

@@ -17,6 +17,8 @@ import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidConfig.Priority;
 import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.ApnsConfig;
+import com.google.firebase.messaging.Aps;
+import com.google.firebase.messaging.ApsAlert;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -40,12 +42,7 @@ public class MyFirebaseService {
 	// 通知メッセージを送信する
 	public String sendMessage(PushRequestDto pushRequestDto) throws FirebaseMessagingException {
 
-		// 01:iPhoneApp. 02:AndroidApp
-		if ("01".equals(pushRequestDto.getTerminalType())) {
-			this.sendIphoneMessage(pushRequestDto);
-		} else if ("02".equals(pushRequestDto.getTerminalType())) {
-			this.sendAndroidMessage(pushRequestDto);
-		}
+		this.sendMessageToUsers(pushRequestDto);
 
 		this.saveNotification(pushRequestDto);
 
@@ -53,12 +50,67 @@ public class MyFirebaseService {
 
 	}
 
+	private void sendMessageToUsers(PushRequestDto pushRequestDto) {
+		DatabaseReference ref = firebaseDatabase.getReference().child("users");
+
+		ref.addListenerForSingleValueEvent(new ValueEventListener() {
+
+			@Override
+			public void onDataChange(DataSnapshot snapshot) {
+				// User 情報を取得する
+				Iterable<DataSnapshot> childrens = snapshot.getChildren();
+				childrens.forEach(snapshotObject -> {
+					// ユーザーごとに送信する
+					User user = snapshotObject.getValue(User.class);
+					if (!user.getDeviceToken().isEmpty()) {
+
+						if ("01".equals(pushRequestDto.getTerminalType())
+								&& pushRequestDto.getTerminalType().equals(user.getTerminalType())) {
+
+							Builder messageBuilder = buildIphoneMessage(pushRequestDto);
+							sendMessage(user.getDeviceToken(), messageBuilder);
+
+						} else if ("02".equals(pushRequestDto.getTerminalType())
+								&& pushRequestDto.getTerminalType().equals(user.getTerminalType())) {
+
+							Builder messageBuilder = buildAndroidMessage(pushRequestDto);
+							sendMessage(user.getDeviceToken(), messageBuilder);
+						}
+					}
+				});
+			}
+
+			@Override
+			public void onCancelled(DatabaseError error) {
+				System.out.println("Failed to read data: " + error.getMessage());
+			}
+		});
+	}
+
 	/**
-	 * AndroidAppへメッセージを送信する
-	 * @param pushRequestDto
-	 * @param appInstanceTokenList
+	 *  
+	 * @param deviceToken
+	 * @param messageBuilder
 	 */
-	private void sendAndroidMessage(PushRequestDto pushRequestDto) {
+	private void sendMessage(String deviceToken, Builder messageBuilder) {
+		Message message = messageBuilder.setToken(deviceToken).build();
+		System.out.println("token: " + deviceToken);
+		try {
+			//メッセージを送信する
+			this.firebaseMessaging.send(message);
+		} catch (FirebaseMessagingException e) {
+			e.printStackTrace();
+			System.err.println(" error!");
+		}
+	}
+	
+
+	/**
+	 * AndroidApp
+	 * @param pushRequestDto
+	 * @return
+	 */
+	private Builder buildAndroidMessage(PushRequestDto pushRequestDto) {
 
 		AndroidNotification notification = AndroidNotification.builder()
 				.setTitle(pushRequestDto.getTitle())
@@ -81,16 +133,17 @@ public class MyFirebaseService {
 				.setAndroidConfig(androidConfig)
 				.putAllData(dataMap);
 
-		this.sendMessage(messageBuilder, this.firebaseMessaging);
+		return messageBuilder;
 
 	}
 
+
 	/**
-	 * iPhoneAppへメッセージを送信する
+	 *  iPhoneApp
 	 * @param pushRequestDto
-	 * @param appInstanceTokenList
+	 * @return
 	 */
-	private void sendIphoneMessage(PushRequestDto pushRequestDto) {
+	private Builder buildIphoneMessage(PushRequestDto pushRequestDto) {
 
 		Map<String, Object> dataMap = new HashMap<String, Object>();
 		dataMap.put("type", "targeted");
@@ -103,18 +156,18 @@ public class MyFirebaseService {
 				.setBody(pushRequestDto.getPopupText()) //
 				.build();
 
-		//		ApsAlert apsAlert = ApsAlert.builder()
-		//				.setTitle(pushRequestDto.getTitle()) //
-		//				.setBody(pushRequestDto.getPopupText()) //
-		//				.build();
-		//
-		//		Aps aps = Aps.builder() //
-		//				.setContentAvailable(true) //
-		//				.setAlert(apsAlert)//
-		//				.build();
+		ApsAlert apsAlert = ApsAlert.builder()
+				.setTitle(pushRequestDto.getTitle()) //
+				.setBody(pushRequestDto.getPopupText()) //
+				.build();
+
+		Aps aps = Aps.builder() //
+				.setContentAvailable(true) //
+				.setAlert(apsAlert)//
+				.build();
 
 		ApnsConfig apnsConfig = ApnsConfig.builder() //
-				//.setAps(aps) //
+				.setAps(aps) //
 				.putAllCustomData(dataMap) //
 				.build();
 
@@ -122,40 +175,7 @@ public class MyFirebaseService {
 				.setNotification(notification)
 				.setApnsConfig(apnsConfig);
 
-		this.sendMessage(messageBuilder, this.firebaseMessaging);
-	}
-
-	// ユーザーごとに送信する
-	private void sendMessage(Builder messageBuilder, FirebaseMessaging firebaseMessaging) {
-		DatabaseReference ref = firebaseDatabase.getReference().child("users");
-
-		ref.addListenerForSingleValueEvent(new ValueEventListener() {
-
-			@Override
-			public void onDataChange(DataSnapshot snapshot) {
-				// User 情報を取得する
-				Iterable<DataSnapshot> childrens = snapshot.getChildren();
-				childrens.forEach(snapshotObject -> {
-					User user = snapshotObject.getValue(User.class);
-					if (!user.getAppInstanceToken().isEmpty()) {
-						Message message = messageBuilder.setToken(user.getAppInstanceToken()).build();
-						System.out.println("token: " + user.getAppInstanceToken());
-						try {
-							//メッセージを送信する
-							firebaseMessaging.send(message);
-						} catch (FirebaseMessagingException e) {
-							e.printStackTrace();
-							System.err.println(" error!");
-						}
-					}
-				});
-			}
-
-			@Override
-			public void onCancelled(DatabaseError error) {
-				System.out.println("Failed to read data: " + error.getMessage());
-			}
-		});
+		return messageBuilder;
 	}
 
 	// 送信内容を保存する

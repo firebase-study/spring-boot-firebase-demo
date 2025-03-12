@@ -44,7 +44,17 @@
       terminalType :   (01:iPhoneApp. 02:AndroidApp)
 
 ``` 
- curl -v -H "Content-Type:application/json" http://localhost:8080/send-fcm -d "{\"pushRequestSeq\":1, \"terminalType\":\"02\", \"popupText\":\"notification body\",\"title\":\"notification title\",\"content\":\"data: message content.......\"}" 
+curl -v -H "Content-Type:application/json" http://localhost:8080/send-fcm -d "{
+  "title": "Match update",
+  "body": "Arsenal goal in added time, score is now 3-0",
+  "data": {
+    "Nick": "Mario",
+    "body": "great match!",
+    "Room": "PortugalVSDenmark"
+  },
+  "click_action": "OPEN_ACTIVITY_1",
+  "category": "NEW_MESSAGE_CATEGORY"
+}" 
 
 ```
 

@@ -33,8 +33,4 @@ public class FirebaseProperties {
 		this.realtimeDatabaseUrl = realtimeDatabaseUrl;
 	}
 	
-	
-	
-	
-
 }

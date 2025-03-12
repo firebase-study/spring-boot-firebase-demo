@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestDto {
-
+	
 	private String title;
 	private String body;
 	private String clickAction;

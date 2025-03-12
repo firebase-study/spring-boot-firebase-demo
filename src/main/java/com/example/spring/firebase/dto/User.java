@@ -1,25 +1,20 @@
 package com.example.spring.firebase.dto;
 
-
 public class User {
-
+	
 	public String userName;
 
 	public String email;
 
 	public String deviceToken;
 	
-	public String terminalType;
-
 	public User() {
 	}
 
-	public User(String userName, String email, String deviceToken, String terminalType) {
-		super();
+	public User(String userName, String email, String deviceToken) {
 		this.userName = userName;
 		this.email = email;
 		this.deviceToken = deviceToken;
-		this.terminalType = terminalType;
 	}
 
 	public String getUserName() {
@@ -44,14 +39,6 @@ public class User {
 
 	public void setDeviceToken(String deviceToken) {
 		this.deviceToken = deviceToken;
-	}
-
-	public String getTerminalType() {
-		return terminalType;
-	}
-
-	public void setTerminalType(String terminalType) {
-		this.terminalType = terminalType;
 	}
 
 }

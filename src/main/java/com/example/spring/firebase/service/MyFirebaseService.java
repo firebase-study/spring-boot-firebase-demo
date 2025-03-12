@@ -28,8 +28,6 @@ import com.google.firebase.messaging.Notification;
 @Service
 public class MyFirebaseService {
 
-	//private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
 	private final FirebaseMessaging firebaseMessaging;
 
 	private final FirebaseDatabase firebaseDatabase;
@@ -156,5 +154,4 @@ public class MyFirebaseService {
 		//		ref.child(child).setValueAsync(pushRequestDto);
 
 	}
-
 }

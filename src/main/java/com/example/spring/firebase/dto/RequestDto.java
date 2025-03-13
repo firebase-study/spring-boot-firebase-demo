@@ -11,7 +11,7 @@ public class RequestDto {
 
 	private String category;
 
-	private Map<String, Object> dataMap = new HashMap();
+	private Map<String, String> data = new HashMap<>();
 
 	public String getCategory() {
 		return category;
@@ -21,12 +21,12 @@ public class RequestDto {
 		this.category = category;
 	}
 
-	public Map<String, Object> getDataMap() {
-		return dataMap;
+	public Map<String, String> getData() {
+		return data;
 	}
 
-	public void setDataMap(Map<String, Object> dataMap) {
-		this.dataMap = dataMap;
+	public void setData(Map<String, String> data) {
+		this.data = data;
 	}
 
 	public String getTitle() {

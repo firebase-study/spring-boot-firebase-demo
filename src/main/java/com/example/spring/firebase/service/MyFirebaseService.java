@@ -6,13 +6,9 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.example.spring.firebase.dto.RequestDto;
-import com.example.spring.firebase.dto.User;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidConfig.Priority;
 import com.google.firebase.messaging.AndroidNotification;
@@ -49,29 +45,36 @@ public class MyFirebaseService {
 	}
 
 	private void sendMessageToUsers(RequestDto requestDto) {
-		DatabaseReference ref = firebaseDatabase.getReference().child("users");
-
-		ref.addListenerForSingleValueEvent(new ValueEventListener() {
-
-			@Override
-			public void onDataChange(DataSnapshot snapshot) {
-				// User 情報を取得する
-				Iterable<DataSnapshot> childrens = snapshot.getChildren();
-				childrens.forEach(snapshotObject -> {
-					// ユーザーごとに送信する
-					User user = snapshotObject.getValue(User.class);
-					if (!user.getDeviceToken().isEmpty()) {
-						Builder messageBuilder = buildMessage(requestDto);
-						sendMessage(user.getDeviceToken(), messageBuilder);
-					}
-				});
-			}
-
-			@Override
-			public void onCancelled(DatabaseError error) {
-				System.out.println("Failed to read data: " + error.getMessage());
-			}
-		});
+		
+		// Amdoriddemo起動したら、logの中にデバイスのtokenを取得できる
+		String token = "d6hE8YN4QNymRcMPiW2qR-:APA91bET-RrZtjW8Yhwgwn9Uz8gzP8N50tqDRksWZLplb-uOYycSaraN0-tpafwjJFb9ZYlHlh2_C4AfEPRHyrX6MlAm5bCLjT6zCFyH5F_unR_aZI2PcbM";
+		
+		Builder messageBuilder = buildMessage(requestDto);
+		sendMessage(token, messageBuilder);
+		
+//		DatabaseReference ref = firebaseDatabase.getReference().child("users");
+//
+//		ref.addListenerForSingleValueEvent(new ValueEventListener() {
+//
+//			@Override
+//			public void onDataChange(DataSnapshot snapshot) {
+//				// User 情報を取得する
+//				Iterable<DataSnapshot> childrens = snapshot.getChildren();
+//				childrens.forEach(snapshotObject -> {
+//					// ユーザーごとに送信する
+//					User user = snapshotObject.getValue(User.class);
+//					if (!user.getDeviceToken().isEmpty()) {
+//						Builder messageBuilder = buildMessage(requestDto);
+//						sendMessage(user.getDeviceToken(), messageBuilder);
+//					}
+//				});
+//			}
+//
+//			@Override
+//			public void onCancelled(DatabaseError error) {
+//				System.out.println("Failed to read data: " + error.getMessage());
+//			}
+//		});
 	}
 
 	/**
@@ -83,8 +86,10 @@ public class MyFirebaseService {
 		Message message = messageBuilder.setToken(deviceToken).build();
 		System.out.println("token: " + deviceToken);
 		try {
+			
 			//メッセージを送信する
 			this.firebaseMessaging.send(message);
+			
 		} catch (FirebaseMessagingException e) {
 			e.printStackTrace();
 			System.err.println(" error!");
@@ -92,8 +97,6 @@ public class MyFirebaseService {
 	}
 
 	private Builder buildMessage(RequestDto requestDto) {
-
-		Map<String, Object> dataMap = requestDto.getDataMap();
 
 		Notification notification = Notification.builder() //
 				.setTitle(requestDto.getTitle()) //
@@ -125,13 +128,14 @@ public class MyFirebaseService {
 
 		ApnsConfig apnsConfig = ApnsConfig.builder() //
 				.setAps(aps) //
-				.putAllCustomData(dataMap) //
 				.build();
 
 		Builder messageBuilder = Message.builder()
 				.setNotification(notification)
 				.setAndroidConfig(androidConfig)
 				.setApnsConfig(apnsConfig);
+		
+		messageBuilder.putAllData(requestDto.getData());
 
 		return messageBuilder;
 	}
@@ -149,9 +153,6 @@ public class MyFirebaseService {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("timestamp", ServerValue.TIMESTAMP);
 		ref.child(key).updateChildrenAsync(map);
-
-		//		String child = String.valueOf(pushRequestDto.getPushRequestSeq());
-		//		ref.child(child).setValueAsync(pushRequestDto);
 
 	}
 }

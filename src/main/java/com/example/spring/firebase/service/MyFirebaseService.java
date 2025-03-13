@@ -46,7 +46,7 @@ public class MyFirebaseService {
 
 	private void sendMessageToUsers(RequestDto requestDto) {
 		
-		// Amdoriddemo起動したら、logの中にデバイスのtokenを取得できる
+		// Andorid demoを起動したら、logの中にデバイスのtokenを取得できる
 		String token = "d6hE8YN4QNymRcMPiW2qR-:APA91bET-RrZtjW8Yhwgwn9Uz8gzP8N50tqDRksWZLplb-uOYycSaraN0-tpafwjJFb9ZYlHlh2_C4AfEPRHyrX6MlAm5bCLjT6zCFyH5F_unR_aZI2PcbM";
 		
 		Builder messageBuilder = buildMessage(requestDto);

@@ -5,14 +5,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.example.spring.firebase.dto.PushRequestDto;
-import com.example.spring.firebase.dto.User;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.example.spring.firebase.dto.RequestDto;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidConfig.Priority;
 import com.google.firebase.messaging.AndroidNotification;
@@ -28,8 +24,6 @@ import com.google.firebase.messaging.Notification;
 @Service
 public class MyFirebaseService {
 
-	//private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
 	private final FirebaseMessaging firebaseMessaging;
 
 	private final FirebaseDatabase firebaseDatabase;
@@ -40,51 +34,47 @@ public class MyFirebaseService {
 	}
 
 	// 通知メッセージを送信する
-	public String sendMessage(PushRequestDto pushRequestDto) throws FirebaseMessagingException {
+	public String sendMessage(RequestDto requestDto) throws FirebaseMessagingException {
 
-		this.sendMessageToUsers(pushRequestDto);
+		this.sendMessageToUsers(requestDto);
 
-		this.saveNotification(pushRequestDto);
+		this.saveNotification(requestDto);
 
 		return "ok";
 
 	}
 
-	private void sendMessageToUsers(PushRequestDto pushRequestDto) {
-		DatabaseReference ref = firebaseDatabase.getReference().child("users");
-
-		ref.addListenerForSingleValueEvent(new ValueEventListener() {
-
-			@Override
-			public void onDataChange(DataSnapshot snapshot) {
-				// User 情報を取得する
-				Iterable<DataSnapshot> childrens = snapshot.getChildren();
-				childrens.forEach(snapshotObject -> {
-					// ユーザーごとに送信する
-					User user = snapshotObject.getValue(User.class);
-					if (!user.getDeviceToken().isEmpty()) {
-
-						if ("01".equals(pushRequestDto.getTerminalType())
-								&& pushRequestDto.getTerminalType().equals(user.getTerminalType())) {
-
-							Builder messageBuilder = buildIphoneMessage(pushRequestDto);
-							sendMessage(user.getDeviceToken(), messageBuilder);
-
-						} else if ("02".equals(pushRequestDto.getTerminalType())
-								&& pushRequestDto.getTerminalType().equals(user.getTerminalType())) {
-
-							Builder messageBuilder = buildAndroidMessage(pushRequestDto);
-							sendMessage(user.getDeviceToken(), messageBuilder);
-						}
-					}
-				});
-			}
-
-			@Override
-			public void onCancelled(DatabaseError error) {
-				System.out.println("Failed to read data: " + error.getMessage());
-			}
-		});
+	private void sendMessageToUsers(RequestDto requestDto) {
+		
+		// Amdoriddemo起動したら、logの中にデバイスのtokenを取得できる
+		String token = "d6hE8YN4QNymRcMPiW2qR-:APA91bET-RrZtjW8Yhwgwn9Uz8gzP8N50tqDRksWZLplb-uOYycSaraN0-tpafwjJFb9ZYlHlh2_C4AfEPRHyrX6MlAm5bCLjT6zCFyH5F_unR_aZI2PcbM";
+		
+		Builder messageBuilder = buildMessage(requestDto);
+		sendMessage(token, messageBuilder);
+		
+//		DatabaseReference ref = firebaseDatabase.getReference().child("users");
+//
+//		ref.addListenerForSingleValueEvent(new ValueEventListener() {
+//
+//			@Override
+//			public void onDataChange(DataSnapshot snapshot) {
+//				// User 情報を取得する
+//				Iterable<DataSnapshot> childrens = snapshot.getChildren();
+//				childrens.forEach(snapshotObject -> {
+//					// ユーザーごとに送信する
+//					User user = snapshotObject.getValue(User.class);
+//					if (!user.getDeviceToken().isEmpty()) {
+//						Builder messageBuilder = buildMessage(requestDto);
+//						sendMessage(user.getDeviceToken(), messageBuilder);
+//					}
+//				});
+//			}
+//
+//			@Override
+//			public void onCancelled(DatabaseError error) {
+//				System.out.println("Failed to read data: " + error.getMessage());
+//			}
+//		});
 	}
 
 	/**
@@ -96,105 +86,73 @@ public class MyFirebaseService {
 		Message message = messageBuilder.setToken(deviceToken).build();
 		System.out.println("token: " + deviceToken);
 		try {
+			
 			//メッセージを送信する
 			this.firebaseMessaging.send(message);
+			
 		} catch (FirebaseMessagingException e) {
 			e.printStackTrace();
 			System.err.println(" error!");
 		}
 	}
-	
 
-	/**
-	 * AndroidApp
-	 * @param pushRequestDto
-	 * @return
-	 */
-	private Builder buildAndroidMessage(PushRequestDto pushRequestDto) {
+	private Builder buildMessage(RequestDto requestDto) {
 
-		AndroidNotification notification = AndroidNotification.builder()
-				.setTitle(pushRequestDto.getTitle())
-				.setBody(pushRequestDto.getPopupText())
+		Notification notification = Notification.builder() //
+				.setTitle(requestDto.getTitle()) //
+				.setBody(requestDto.getBody()) //
+				.build();
+
+		AndroidNotification androidNotification = AndroidNotification.builder()
+				.setTitle(requestDto.getTitle())
+				.setBody(requestDto.getBody())
+				.setClickAction(requestDto.getClickAction())
 				.build();
 
 		AndroidConfig androidConfig = AndroidConfig.builder()
-				.setNotification(notification)
+				.setNotification(androidNotification)
 				.setPriority(Priority.HIGH)
 				.setTtl(4500)
 				.build();
 
-		Map<String, String> dataMap = new HashMap<String, String>();
-		dataMap.put("type", "targeted");
-		dataMap.put("content_type", "text/plain");
-		dataMap.put("platform", pushRequestDto.getTerminalType());
-		dataMap.put("content", pushRequestDto.getContent());
-
-		Builder messageBuilder = Message.builder()
-				.setAndroidConfig(androidConfig)
-				.putAllData(dataMap);
-
-		return messageBuilder;
-
-	}
-
-
-	/**
-	 *  iPhoneApp
-	 * @param pushRequestDto
-	 * @return
-	 */
-	private Builder buildIphoneMessage(PushRequestDto pushRequestDto) {
-
-		Map<String, Object> dataMap = new HashMap<String, Object>();
-		dataMap.put("type", "targeted");
-		dataMap.put("content_type", "text/plain");
-		dataMap.put("platform", pushRequestDto.getTerminalType());
-		dataMap.put("content", pushRequestDto.getContent());
-
-		Notification notification = Notification.builder() //
-				.setTitle(pushRequestDto.getTitle()) //
-				.setBody(pushRequestDto.getPopupText()) //
-				.build();
-
 		ApsAlert apsAlert = ApsAlert.builder()
-				.setTitle(pushRequestDto.getTitle()) //
-				.setBody(pushRequestDto.getPopupText()) //
+				.setTitle(requestDto.getTitle()) //
+				.setBody(requestDto.getBody()) //
 				.build();
 
 		Aps aps = Aps.builder() //
 				.setContentAvailable(true) //
 				.setAlert(apsAlert)//
+				.setCategory(requestDto.getCategory())
 				.build();
 
 		ApnsConfig apnsConfig = ApnsConfig.builder() //
 				.setAps(aps) //
-				.putAllCustomData(dataMap) //
 				.build();
 
 		Builder messageBuilder = Message.builder()
 				.setNotification(notification)
+				.setAndroidConfig(androidConfig)
 				.setApnsConfig(apnsConfig);
+		
+		messageBuilder.putAllData(requestDto.getData());
 
 		return messageBuilder;
 	}
 
 	// 送信内容を保存する
-	private void saveNotification(PushRequestDto pushRequestDto) {
+	private void saveNotification(RequestDto requestDto) {
 		DatabaseReference ref = firebaseDatabase.getReference().child("push-request");
 
 		//		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHHmmss");
 		//		String notificationTime = LocalDateTime.now().format(formatter);
 
 		String key = ref.push().getKey();
-		ref.child(key).setValueAsync(pushRequestDto);
+		ref.child(key).setValueAsync(requestDto);
 
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("timestamp", ServerValue.TIMESTAMP);
 		ref.child(key).updateChildrenAsync(map);
 
-		//		String child = String.valueOf(pushRequestDto.getPushRequestSeq());
-		//		ref.child(child).setValueAsync(pushRequestDto);
-
 	}
-
 }

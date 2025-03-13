@@ -1,7 +1,5 @@
 package com.example.spring.firebase.config;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -27,22 +25,17 @@ public class FirebaseConfig {
 		this.firebaseProperties = firebaseProperties;
 		this.resourceLoader = resourceLoader;
 	}
-
+	
 	@Bean
-	GoogleCredentials googleCredentials() {
+	FirebaseApp firebaseApp() throws Exception {
+		
+		//FileInputStream refreshToken = new FileInputStream("src/main/resources/service-account-adminsdk.json");
 		Resource serviceAccount = resourceLoader.getResource(firebaseProperties.getServiceAccountFileName());
-		try {
-			return GoogleCredentials.fromStream(serviceAccount.getInputStream())
-					.createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Bean
-	FirebaseApp firebaseApp(GoogleCredentials credentials) {
-		FirebaseOptions options = FirebaseOptions.builder().setCredentials(credentials)
-				.setDatabaseUrl(firebaseProperties.getRealtimeDatabaseUrl()).build();
+		
+		FirebaseOptions options = FirebaseOptions.builder()
+			    .setCredentials(GoogleCredentials.fromStream(serviceAccount.getInputStream()))
+			    .setDatabaseUrl(firebaseProperties.getRealtimeDatabaseUrl())
+			    .build();
 
 		List<FirebaseApp> firebaseAppList = FirebaseApp.getApps();
 		if (firebaseAppList.isEmpty()) {
